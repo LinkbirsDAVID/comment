@@ -118,6 +118,21 @@ border-radius:16px;
 box-shadow:0 10px 25px rgba(0,0,0,.08);
 }
 
+.featured{
+border:2px solid #4aa3ff;
+}
+
+.featured-label{
+background:#4aa3ff;
+color:white;
+font-size:12px;
+padding:4px 8px;
+border-radius:6px;
+display:inline-block;
+margin-bottom:8px;
+font-weight:600;
+}
+
 .username{
 font-weight:700;
 margin-bottom:6px;
@@ -138,10 +153,21 @@ padding:12px;
 border-radius:10px;
 font-size:13px;
 border-left:4px solid #003B8E;
+display:flex;
+gap:10px;
+align-items:flex-start;
 }
 
-.reply strong{
+.reply img{
+width:32px;
+height:32px;
+border-radius:8px;
+}
+
+.reply-name{
+font-weight:700;
 color:#003B8E;
+margin-bottom:2px;
 }
 
 /* REACTIONS */
@@ -223,6 +249,10 @@ const data=await res.json()
 
 comments=data.record.comments||[]
 
+/* ordenar destacados */
+
+comments.sort((a,b)=>(b.featured===true)-(a.featured===true))
+
 renderComments()
 
 }
@@ -235,13 +265,39 @@ const container=document.getElementById("comments")
 
 container.innerHTML=comments.map((c,i)=>`
 
-<div class="comment">
+<div class="comment ${c.featured?'featured':''}">
+
+${c.featured?'<div class="featured-label">⭐ Comentario destacado</div>':''}
 
 <div class="username">${c.username}</div>
 
 <p>${c.text}</p>
 
-${c.reply ? `<div class="reply"><strong>IDILSA respondió:</strong><br>${c.reply}</div>` : ""}
+${c.reply ? `
+
+<div class="reply">
+
+<img src="WhatsApp Image 2026-03-07 at 9.50.29 PM.jpeg">
+
+<div>
+
+<div class="reply-name">IDILSA</div>
+
+<div>${c.reply}</div>
+
+<div class="reactions">
+
+<button onclick="likeReply(${i})">👍 ${c.replyLikes||0}</button>
+
+<button onclick="dislikeReply(${i})">👎 ${c.replyDislikes||0}</button>
+
+</div>
+
+</div>
+
+</div>
+
+`:""}
 
 <div class="reactions">
 
@@ -289,16 +345,12 @@ alert("Completa los campos")
 return
 }
 
-/* anti spam */
-
 const now=Date.now()
 
 if(now-lastCommentTime<10000){
 alert("Espera 10 segundos antes de comentar otra vez")
 return
 }
-
-/* anti duplicado */
 
 if(comments.some(c=>c.text.toLowerCase()===text.toLowerCase())){
 alert("Ese comentario ya fue publicado")
@@ -313,7 +365,10 @@ username:username,
 text:text,
 likes:0,
 dislikes:0,
-reply:""
+reply:"",
+replyLikes:0,
+replyDislikes:0,
+featured:false
 
 })
 
@@ -326,7 +381,7 @@ await saveComments()
 
 }
 
-/* LIKE */
+/* LIKE COMENTARIO */
 
 function like(i){
 
@@ -338,11 +393,35 @@ saveComments()
 
 }
 
-/* DISLIKE */
+/* DISLIKE COMENTARIO */
 
 function dislike(i){
 
 comments[i].dislikes=(comments[i].dislikes||0)+1
+
+renderComments()
+
+saveComments()
+
+}
+
+/* LIKE RESPUESTA */
+
+function likeReply(i){
+
+comments[i].replyLikes=(comments[i].replyLikes||0)+1
+
+renderComments()
+
+saveComments()
+
+}
+
+/* DISLIKE RESPUESTA */
+
+function dislikeReply(i){
+
+comments[i].replyDislikes=(comments[i].replyDislikes||0)+1
 
 renderComments()
 
