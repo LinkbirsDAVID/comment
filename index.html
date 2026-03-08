@@ -2,118 +2,185 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>IDILSA - Comentarios</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDILSA | Comentarios</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 
-body{
-font-family:Arial;
-background:#f4f6fb;
+*{
 margin:0;
 padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif
 }
 
-header{
-background:#0d47a1;
-color:white;
-padding:25px;
-text-align:center;
-font-size:28px;
-font-weight:bold;
+body{
+background:#f4f6fb;
+color:#111;
 }
+
+/* HERO */
+
+.hero{
+height:260px;
+background:
+linear-gradient(rgba(0,0,0,0.35),rgba(0,0,0,0.55)),
+url("https://i.ibb.co/HDMyyLZs/trabajadores.jpg");
+background-size:cover;
+background-position:center;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+}
+
+.hero img{
+width:110px;
+border-radius:14px;
+margin-bottom:10px;
+box-shadow:0 15px 40px rgba(0,0,0,0.45);
+}
+
+.hero h1{
+font-size:2.2rem;
+color:white;
+font-weight:800;
+}
+
+.hero span{
+color:#4aa3ff;
+}
+
+/* CONTENEDOR */
 
 .container{
 max-width:900px;
-margin:auto;
-padding:20px;
+margin:40px auto;
+padding:0 16px;
 }
 
-.commentBox{
+/* CARD */
+
+.card{
 background:white;
-padding:20px;
-border-radius:10px;
-margin-bottom:30px;
-box-shadow:0 2px 10px rgba(0,0,0,0.1);
+border-radius:22px;
+padding:30px;
+box-shadow:0 25px 60px rgba(0,0,0,.15);
 }
 
-input,textarea{
-width:100%;
-padding:10px;
-margin-top:8px;
-margin-bottom:15px;
-border-radius:6px;
-border:1px solid #ccc;
+/* FORM */
+
+.form-title{
+font-size:1.3rem;
+font-weight:700;
+margin-bottom:20px;
+}
+
+.comment-form{
+display:flex;
+flex-direction:column;
+gap:12px;
+margin-bottom:35px;
+}
+
+.comment-form input,
+.comment-form textarea{
+padding:14px;
+border-radius:12px;
+border:1px solid #ddd;
 font-size:14px;
 }
 
-button{
-background:#0d47a1;
+.comment-form button{
+background:#003B8E;
 color:white;
 border:none;
-padding:10px 15px;
-border-radius:6px;
+padding:13px;
+border-radius:12px;
+font-weight:700;
+cursor:pointer;
+}
+
+/* COMMENTS */
+
+.comments{
+display:flex;
+flex-direction:column;
+gap:18px;
+}
+
+.comment{
+background:#fff;
+padding:18px;
+border-radius:16px;
+box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+.username{
+font-weight:700;
+margin-bottom:6px;
+}
+
+.comment p{
+font-size:14px;
+line-height:1.6;
+color:#444;
+}
+
+/* REACTIONS */
+
+.reactions{
+margin-top:10px;
+display:flex;
+gap:18px;
+}
+
+.reactions button{
+border:none;
+background:none;
 cursor:pointer;
 font-size:14px;
 }
 
-button:hover{
-background:#1565c0;
-}
-
-.comment{
-background:white;
-padding:15px;
-margin-bottom:15px;
-border-radius:10px;
-box-shadow:0 1px 6px rgba(0,0,0,0.1);
-}
-
-.commentHeader{
-font-weight:bold;
-margin-bottom:5px;
-}
-
-.commentDate{
-font-size:12px;
-color:#777;
-margin-bottom:10px;
-}
-
-.voteBtns button{
-margin-right:10px;
+.reactions button:hover{
+transform:scale(1.1);
 }
 
 </style>
-
 </head>
 
 <body>
 
-<header>
-IDILSA - Opiniones de clientes
-</header>
+<section class="hero">
+<div>
+<img src="WhatsApp Image 2026-03-07 at 9.50.29 PM.jpeg">
+<h1>Comentarios de <span>IDILSA</span></h1>
+</div>
+</section>
 
-<div class="container">
+<section class="container">
 
-<div class="commentBox">
+<div class="card">
 
-<h3>Deja tu comentario</h3>
+<div class="form-title">Deja tu comentario</div>
 
-<input id="name" placeholder="Tu nombre">
+<div class="comment-form">
+<input id="username" placeholder="Nombre o empresa">
+<textarea id="comment" rows="4" placeholder="Escribe tu comentario..."></textarea>
+<button onclick="postComment()">Enviar</button>
+</div>
 
-<textarea id="text" placeholder="Escribe tu comentario"></textarea>
-
-<button onclick="addComment()">Publicar comentario</button>
+<div class="comments" id="comments"></div>
 
 </div>
 
-<h3>Comentarios</h3>
-
-<div id="comments"></div>
-
-</div>
+</section>
 
 <script>
+
+/* CONFIG JSONBIN */
 
 const BIN_ID="69acf753ae596e708f6b9906"
 
@@ -121,274 +188,151 @@ const MASTER_KEY="$2a$10$b7iTGCHm3sPBn6UyLHiCZ.gSwzF/0y7X/a3mpVuqHE2ewj2sEd9Yi"
 
 const ACCESS_KEY="$2a$10$I6PZpdf7tigg4VzFm.HK4.0prPJwN4BpoCJiiLFEAzstr9juBlx.K"
 
-const API=`https://api.jsonbin.io/v3/b/${BIN_ID}`
+let comments=[]
 
+let lastCommentTime=0
 
+/* CARGAR */
 
-const bannedWords=[
-"sexo",
-"porn",
-"puta",
-"puto",
-"mierda",
-"pendejo",
-"idiota"
-]
+async function loadComments(){
 
-
-
-function containsSpam(text){
-
-text=text.toLowerCase()
-
-for(let word of bannedWords){
-
-if(text.includes(word)) return true
-
-}
-
-return false
-
-}
-
-
-
-async function getData(){
-
-const res=await fetch(API+"/latest",{
+const res=await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,{
 
 headers:{
-"X-Master-Key":MASTER_KEY
+'X-Master-Key':MASTER_KEY,
+'X-Access-Key':ACCESS_KEY
 }
 
 })
 
 const data=await res.json()
 
-return data.record
+comments=data.record.comments||[]
+
+renderComments()
 
 }
 
+/* MOSTRAR */
 
+function renderComments(){
 
-async function saveData(data){
+const container=document.getElementById("comments")
 
-await fetch(API,{
+container.innerHTML=comments.map((c,i)=>`
+
+<div class="comment">
+
+<div class="username">${c.username}</div>
+
+<p>${c.text}</p>
+
+<div class="reactions">
+
+<button onclick="like(${i})">👍 ${c.likes||0}</button>
+
+<button onclick="dislike(${i})">👎 ${c.dislikes||0}</button>
+
+</div>
+
+</div>
+
+`).join("")
+
+}
+
+/* GUARDAR */
+
+async function saveComments(){
+
+await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`,{
 
 method:"PUT",
 
 headers:{
-"Content-Type":"application/json",
-"X-Master-Key":MASTER_KEY
+'Content-Type':'application/json',
+'X-Master-Key':MASTER_KEY,
+'X-Access-Key':ACCESS_KEY
 },
 
-body:JSON.stringify(data)
+body:JSON.stringify({comments})
 
 })
 
 }
 
+/* PUBLICAR */
 
+async function postComment(){
 
-function formatDate(timestamp){
+const username=document.getElementById("username").value.trim()
 
-const d=new Date(timestamp)
+const text=document.getElementById("comment").value.trim()
 
-return d.toLocaleString()
-
-}
-
-
-
-async function loadComments(){
-
-const data=await getData()
-
-const container=document.getElementById("comments")
-
-container.innerHTML=""
-
-
-
-data.comments.reverse().forEach(c=>{
-
-const div=document.createElement("div")
-
-div.className="comment"
-
-
-
-const liked=localStorage.getItem("liked_"+c.id)
-
-const disliked=localStorage.getItem("disliked_"+c.id)
-
-
-
-div.innerHTML=`
-
-<div class="commentHeader">${c.name}</div>
-
-<div class="commentDate">${formatDate(c.date)}</div>
-
-<div>${c.text}</div>
-
-<br>
-
-<div class="voteBtns">
-
-<button onclick="likeComment('${c.id}')" ${liked?'disabled':''}>👍 ${c.likes}</button>
-
-<button onclick="dislikeComment('${c.id}')" ${disliked?'disabled':''}>👎 ${c.dislikes}</button>
-
-</div>
-
-`
-
-
-
-container.appendChild(div)
-
-})
-
-}
-
-
-
-async function addComment(){
-
-const name=document.getElementById("name").value.trim()
-
-const text=document.getElementById("text").value.trim()
-
-
-
-if(name=="" || text==""){
-
+if(!username||!text){
 alert("Completa los campos")
-
 return
-
 }
 
+/* anti spam tiempo */
 
+const now=Date.now()
 
-if(text.length>300){
-
-alert("Comentario demasiado largo")
-
+if(now-lastCommentTime<10000){
+alert("Espera 10 segundos antes de comentar otra vez")
 return
-
 }
 
+/* anti duplicado */
 
-
-if(containsSpam(text)){
-
-alert("Comentario bloqueado por spam")
-
+if(comments.some(c=>c.text.toLowerCase()===text.toLowerCase())){
+alert("Ese comentario ya fue publicado")
 return
-
 }
 
+lastCommentTime=now
 
+comments.unshift({
 
-const data=await getData()
-
-
-
-const newComment={
-
-id:Date.now(),
-
-name:name,
-
+username:username,
 text:text,
-
-date:Date.now(),
-
 likes:0,
-
 dislikes:0
 
-}
+})
 
+document.getElementById("username").value=""
+document.getElementById("comment").value=""
 
+renderComments()
 
-data.comments.push(newComment)
-
-
-
-await saveData(data)
-
-
-
-document.getElementById("name").value=""
-
-document.getElementById("text").value=""
-
-
-
-loadComments()
+await saveComments()
 
 }
 
+/* LIKE */
 
+function like(i){
 
-async function likeComment(id){
+comments[i].likes=(comments[i].likes||0)+1
 
-if(localStorage.getItem("liked_"+id)) return
+renderComments()
 
-
-
-const data=await getData()
-
-const comment=data.comments.find(c=>c.id==id)
-
-comment.likes++
-
-
-
-localStorage.setItem("liked_"+id,true)
-
-
-
-await saveData(data)
-
-
-
-loadComments()
+saveComments()
 
 }
 
+/* DISLIKE */
 
+function dislike(i){
 
-async function dislikeComment(id){
+comments[i].dislikes=(comments[i].dislikes||0)+1
 
-if(localStorage.getItem("disliked_"+id)) return
+renderComments()
 
-
-
-const data=await getData()
-
-const comment=data.comments.find(c=>c.id==id)
-
-comment.dislikes++
-
-
-
-localStorage.setItem("disliked_"+id,true)
-
-
-
-await saveData(data)
-
-
-
-loadComments()
+saveComments()
 
 }
-
-
 
 loadComments()
 
