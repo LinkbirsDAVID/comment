@@ -129,6 +129,25 @@ line-height:1.6;
 color:#444;
 }
 
+/* REACTIONS */
+
+.reactions{
+margin-top:10px;
+display:flex;
+gap:18px;
+}
+
+.reactions button{
+border:none;
+background:none;
+cursor:pointer;
+font-size:14px;
+}
+
+.reactions button:hover{
+transform:scale(1.1);
+}
+
 </style>
 </head>
 
@@ -163,19 +182,21 @@ color:#444;
 
 /* CONFIG JSONBIN */
 
-const BIN_ID = "69acf753ae596e708f6b9906"
+const BIN_ID="69acf753ae596e708f6b9906"
 
-const MASTER_KEY = "$2a$10$b7iTGCHm3sPBn6UyLHiCZ.gSwzF/0y7X/a3mpVuqHE2ewj2sEd9Yi"
+const MASTER_KEY="$2a$10$b7iTGCHm3sPBn6UyLHiCZ.gSwzF/0y7X/a3mpVuqHE2ewj2sEd9Yi"
 
-const ACCESS_KEY = "$2a$10$I6PZpdf7tigg4VzFm.HK4.0prPJwN4BpoCJiiLFEAzstr9juBlx.K"
+const ACCESS_KEY="$2a$10$I6PZpdf7tigg4VzFm.HK4.0prPJwN4BpoCJiiLFEAzstr9juBlx.K"
 
-let comments = []
+let comments=[]
 
-/* CARGAR COMENTARIOS */
+let lastCommentTime=0
+
+/* CARGAR */
 
 async function loadComments(){
 
-const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,{
+const res=await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,{
 
 headers:{
 'X-Master-Key':MASTER_KEY,
@@ -184,9 +205,9 @@ headers:{
 
 })
 
-const data = await res.json()
+const data=await res.json()
 
-comments = data.record.comments || []
+comments=data.record.comments||[]
 
 renderComments()
 
@@ -196,16 +217,27 @@ renderComments()
 
 function renderComments(){
 
-const container = document.getElementById("comments")
+const container=document.getElementById("comments")
 
-container.innerHTML = comments.map(c =>
+container.innerHTML=comments.map((c,i)=>`
 
-`<div class="comment">
+<div class="comment">
+
 <div class="username">${c.username}</div>
-<p>${c.text}</p>
-</div>`
 
-).join("")
+<p>${c.text}</p>
+
+<div class="reactions">
+
+<button onclick="like(${i})">👍 ${c.likes||0}</button>
+
+<button onclick="dislike(${i})">👎 ${c.dislikes||0}</button>
+
+</div>
+
+</div>
+
+`).join("")
 
 }
 
@@ -233,27 +265,44 @@ body:JSON.stringify({comments})
 
 async function postComment(){
 
-const username = document.getElementById("username").value.trim()
+const username=document.getElementById("username").value.trim()
 
-const text = document.getElementById("comment").value.trim()
+const text=document.getElementById("comment").value.trim()
 
-if(!username || !text){
-
+if(!username||!text){
 alert("Completa los campos")
-
 return
-
 }
+
+/* anti spam tiempo */
+
+const now=Date.now()
+
+if(now-lastCommentTime<10000){
+alert("Espera 10 segundos antes de comentar otra vez")
+return
+}
+
+/* anti duplicado */
+
+if(comments.some(c=>c.text.toLowerCase()===text.toLowerCase())){
+alert("Ese comentario ya fue publicado")
+return
+}
+
+lastCommentTime=now
 
 comments.unshift({
 
 username:username,
-text:text
+text:text,
+likes:0,
+dislikes:0
 
 })
 
-document.getElementById("username").value = ""
-document.getElementById("comment").value = ""
+document.getElementById("username").value=""
+document.getElementById("comment").value=""
 
 renderComments()
 
@@ -261,7 +310,29 @@ await saveComments()
 
 }
 
-/* INICIAR */
+/* LIKE */
+
+function like(i){
+
+comments[i].likes=(comments[i].likes||0)+1
+
+renderComments()
+
+saveComments()
+
+}
+
+/* DISLIKE */
+
+function dislike(i){
+
+comments[i].dislikes=(comments[i].dislikes||0)+1
+
+renderComments()
+
+saveComments()
+
+}
 
 loadComments()
 
