@@ -26,7 +26,7 @@ color:#111;
 .hero{
 height:260px;
 background:
-linear-gradient(rgba(0,0,0,0.25),rgba(0,0,0,0.45)),
+linear-gradient(rgba(0,0,0,0.35),rgba(0,0,0,0.55)),
 url("https://i.ibb.co/HDMyyLZs/trabajadores.jpg");
 background-size:cover;
 background-position:center;
@@ -93,13 +93,6 @@ border:1px solid #ddd;
 font-size:14px;
 }
 
-.comment-form input:focus,
-.comment-form textarea:focus{
-outline:none;
-border-color:#003B8E;
-box-shadow:0 0 0 3px rgba(0,59,142,.2);
-}
-
 .comment-form button{
 background:#003B8E;
 color:white;
@@ -136,38 +129,6 @@ line-height:1.6;
 color:#444;
 }
 
-/* REPLY */
-
-.reply{
-margin-top:10px;
-padding:10px;
-background:#f5f8ff;
-border-left:4px solid #003B8E;
-display:flex;
-gap:10px;
-}
-
-.reply img{
-width:36px;
-height:36px;
-border-radius:50%;
-}
-
-/* REACCIONES */
-
-.reactions{
-margin-top:10px;
-display:flex;
-gap:16px;
-}
-
-.reactions button{
-background:none;
-border:none;
-cursor:pointer;
-font-size:14px;
-}
-
 </style>
 </head>
 
@@ -192,7 +153,7 @@ font-size:14px;
 <button onclick="postComment()">Enviar</button>
 </div>
 
-<div class="comments" id="comments-container"></div>
+<div class="comments" id="comments"></div>
 
 </div>
 
@@ -200,119 +161,109 @@ font-size:14px;
 
 <script>
 
-const COMPANY_LOGO="WhatsApp Image 2026-03-07 at 9.50.29 PM.jpeg"
+/* CONFIG JSONBIN */
 
-const apiKey='$2a$10$I6PZpdf7tigg4VzFm.HK4.0prPJwN4BpoCJiiLFEAzstr9juBlx.K'
-const binId='6938e950d0ea881f401e8e90'
+const BIN_ID = "69acf753ae596e708f6b9906"
+
+const MASTER_KEY = "$2a$10$b7iTGCHm3sPBn6UyLHiCZ.gSwzF/0y7X/a3mpVuqHE2ewj2sEd9Yi"
+
+const ACCESS_KEY = "$2a$10$I6PZpdf7tigg4VzFm.HK4.0prPJwN4BpoCJiiLFEAzstr9juBlx.K"
+
+let comments = []
+
+/* CARGAR COMENTARIOS */
 
 async function loadComments(){
 
-const r=await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`,{
-headers:{'X-Master-Key':apiKey}
+const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,{
+
+headers:{
+'X-Master-Key':MASTER_KEY,
+'X-Access-Key':ACCESS_KEY
+}
+
 })
 
-const d=await r.json()
+const data = await res.json()
 
-/* detecta diferentes estructuras */
-
-if(d.record.comments){
-window.comments=d.record.comments
-}
-else if(Array.isArray(d.record)){
-window.comments=d.record
-}
-else{
-window.comments=[]
-}
+comments = data.record.comments || []
 
 renderComments()
 
 }
+
+/* MOSTRAR */
 
 function renderComments(){
 
-const c=document.getElementById('comments-container')
+const container = document.getElementById("comments")
 
-c.innerHTML=window.comments.map((x,i)=>`
+container.innerHTML = comments.map(c =>
 
-<div class="comment">
+`<div class="comment">
+<div class="username">${c.username}</div>
+<p>${c.text}</p>
+</div>`
 
-<div class="username">${x.username || "Usuario"}</div>
-
-<p>${x.text || x.comment || ""}</p>
-
-<div class="reactions">
-
-<button onclick="like(${i})">👍 ${x.likes||0}</button>
-
-<button onclick="dislike(${i})">👎 ${x.dislikes||0}</button>
-
-</div>
-
-</div>
-
-`).join('')
+).join("")
 
 }
 
-async function save(){
+/* GUARDAR */
 
-await fetch(`https://api.jsonbin.io/v3/b/${binId}`,{
+async function saveComments(){
 
-method:'PUT',
+await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`,{
+
+method:"PUT",
 
 headers:{
 'Content-Type':'application/json',
-'X-Master-Key':apiKey
+'X-Master-Key':MASTER_KEY,
+'X-Access-Key':ACCESS_KEY
 },
 
-body:JSON.stringify({comments:window.comments})
+body:JSON.stringify({comments})
 
 })
 
 }
+
+/* PUBLICAR */
 
 async function postComment(){
 
-const u=username.value.trim()
-const t=comment.value.trim()
+const username = document.getElementById("username").value.trim()
 
-if(!u||!t){
-alert('Completa los campos')
+const text = document.getElementById("comment").value.trim()
+
+if(!username || !text){
+
+alert("Completa los campos")
+
 return
+
 }
 
-window.comments.unshift({
+comments.unshift({
 
-username:u,
-text:t,
-likes:0,
-dislikes:0
+username:username,
+text:text
 
 })
 
-username.value=''
-comment.value=''
+document.getElementById("username").value = ""
+document.getElementById("comment").value = ""
 
 renderComments()
 
-await save()
+await saveComments()
 
 }
 
-function like(i){
-window.comments[i].likes=(window.comments[i].likes||0)+1
-renderComments()
-save()
-}
+/* INICIAR */
 
-function dislike(i){
-window.comments[i].dislikes=(window.comments[i].dislikes||0)+1
-renderComments()
-save()
-}
-
-window.onload=loadComments
+loadComments()
 
 </script>
 
