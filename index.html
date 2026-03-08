@@ -24,41 +24,29 @@ color:#111;
 /* HERO */
 
 .hero{
-
 height:260px;
-
 background:
-linear-gradient(rgba(0,0,0,0.35),rgba(0,0,0,0.55)),
+linear-gradient(rgba(0,0,0,0.25),rgba(0,0,0,0.45)),
 url("https://i.ibb.co/HDMyyLZs/trabajadores.jpg");
-
 background-size:cover;
 background-position:center;
-
 display:flex;
 align-items:center;
 justify-content:center;
 text-align:center;
-padding:20px;
-
-}
-
-.hero-content{
-color:white;
 }
 
 .hero img{
-
 width:110px;
 border-radius:14px;
 margin-bottom:10px;
 box-shadow:0 15px 40px rgba(0,0,0,0.45);
-
 }
 
 .hero h1{
 font-size:2.2rem;
+color:white;
 font-weight:800;
-text-shadow:0 3px 15px rgba(0,0,0,0.6);
 }
 
 .hero span{
@@ -68,22 +56,18 @@ color:#4aa3ff;
 /* CONTENEDOR */
 
 .container{
-
 max-width:900px;
 margin:40px auto;
 padding:0 16px;
-
 }
 
 /* CARD */
 
 .card{
-
 background:white;
 border-radius:22px;
 padding:30px;
 box-shadow:0 25px 60px rgba(0,0,0,.15);
-
 }
 
 /* FORM */
@@ -103,25 +87,20 @@ margin-bottom:35px;
 
 .comment-form input,
 .comment-form textarea{
-
 padding:14px;
 border-radius:12px;
 border:1px solid #ddd;
 font-size:14px;
-
 }
 
 .comment-form input:focus,
 .comment-form textarea:focus{
-
 outline:none;
 border-color:#003B8E;
 box-shadow:0 0 0 3px rgba(0,59,142,.2);
-
 }
 
 .comment-form button{
-
 background:#003B8E;
 color:white;
 border:none;
@@ -129,13 +108,6 @@ padding:13px;
 border-radius:12px;
 font-weight:700;
 cursor:pointer;
-transition:.2s;
-
-}
-
-.comment-form button:hover{
-transform:translateY(-2px);
-box-shadow:0 10px 25px rgba(0,0,0,.2);
 }
 
 /* COMMENTS */
@@ -147,12 +119,10 @@ gap:18px;
 }
 
 .comment{
-
 background:#fff;
 padding:18px;
 border-radius:16px;
 box-shadow:0 10px 25px rgba(0,0,0,.08);
-
 }
 
 .username{
@@ -166,17 +136,15 @@ line-height:1.6;
 color:#444;
 }
 
-/* RESPUESTA EMPRESA */
+/* REPLY */
 
 .reply{
-
 margin-top:10px;
 padding:10px;
 background:#f5f8ff;
 border-left:4px solid #003B8E;
 display:flex;
 gap:10px;
-
 }
 
 .reply img{
@@ -188,25 +156,16 @@ border-radius:50%;
 /* REACCIONES */
 
 .reactions{
-
 margin-top:10px;
 display:flex;
 gap:16px;
-
 }
 
 .reactions button{
-
 background:none;
 border:none;
 cursor:pointer;
 font-size:14px;
-color:#555;
-
-}
-
-.reactions button:hover{
-transform:scale(1.1);
 }
 
 </style>
@@ -215,15 +174,10 @@ transform:scale(1.1);
 <body>
 
 <section class="hero">
-
-<div class="hero-content">
-
+<div>
 <img src="WhatsApp Image 2026-03-07 at 9.50.29 PM.jpeg">
-
 <h1>Comentarios de <span>IDILSA</span></h1>
-
 </div>
-
 </section>
 
 <section class="container">
@@ -233,13 +187,9 @@ transform:scale(1.1);
 <div class="form-title">Deja tu comentario</div>
 
 <div class="comment-form">
-
 <input id="username" placeholder="Nombre o empresa">
-
 <textarea id="comment" rows="4" placeholder="Escribe tu comentario..."></textarea>
-
 <button onclick="postComment()">Enviar</button>
-
 </div>
 
 <div class="comments" id="comments-container"></div>
@@ -252,7 +202,6 @@ transform:scale(1.1);
 
 const COMPANY_LOGO="WhatsApp Image 2026-03-07 at 9.50.29 PM.jpeg"
 
-/* NUEVO BIN */
 const apiKey='$2a$10$I6PZpdf7tigg4VzFm.HK4.0prPJwN4BpoCJiiLFEAzstr9juBlx.K'
 const binId='6938e950d0ea881f401e8e90'
 
@@ -264,7 +213,17 @@ headers:{'X-Master-Key':apiKey}
 
 const d=await r.json()
 
-window.comments=d.record.comments||[]
+/* detecta diferentes estructuras */
+
+if(d.record.comments){
+window.comments=d.record.comments
+}
+else if(Array.isArray(d.record)){
+window.comments=d.record
+}
+else{
+window.comments=[]
+}
 
 renderComments()
 
@@ -278,35 +237,9 @@ c.innerHTML=window.comments.map((x,i)=>`
 
 <div class="comment">
 
-<div class="username">${x.username}</div>
+<div class="username">${x.username || "Usuario"}</div>
 
-<p>${x.text}</p>
-
-${x.reply?`
-
-<div class="reply">
-
-<img src="${x.reply.logo||COMPANY_LOGO}">
-
-<div>
-
-<strong>IDILSA – Empresa</strong>
-
-<p>${x.reply.text}</p>
-
-<div class="reactions">
-
-<button onclick="likeReply(${i})">😁 ${x.reply.likes||0}</button>
-
-<button onclick="dislikeReply(${i})">🫤 ${x.reply.dislikes||0}</button>
-
-</div>
-
-</div>
-
-</div>
-
-`:''}
+<p>${x.text || x.comment || ""}</p>
 
 <div class="reactions">
 
@@ -368,25 +301,13 @@ await save()
 }
 
 function like(i){
-window.comments[i].likes++
+window.comments[i].likes=(window.comments[i].likes||0)+1
 renderComments()
 save()
 }
 
 function dislike(i){
-window.comments[i].dislikes++
-renderComments()
-save()
-}
-
-function likeReply(i){
-window.comments[i].reply.likes=(window.comments[i].reply.likes||0)+1
-renderComments()
-save()
-}
-
-function dislikeReply(i){
-window.comments[i].reply.dislikes=(window.comments[i].reply.dislikes||0)+1
+window.comments[i].dislikes=(window.comments[i].dislikes||0)+1
 renderComments()
 save()
 }
@@ -397,4 +318,3 @@ window.onload=loadComments
 
 </body>
 </html>
-```
