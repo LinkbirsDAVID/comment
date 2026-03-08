@@ -224,9 +224,7 @@ transform:scale(1.1);
 /* CONFIG JSONBIN */
 
 const BIN_ID="69acf753ae596e708f6b9906"
-
 const MASTER_KEY="$2a$10$b7iTGCHm3sPBn6UyLHiCZ.gSwzF/0y7X/a3mpVuqHE2ewj2sEd9Yi"
-
 const ACCESS_KEY="$2a$10$I6PZpdf7tigg4VzFm.HK4.0prPJwN4BpoCJiiLFEAzstr9juBlx.K"
 
 let comments=[]
@@ -237,19 +235,15 @@ let lastCommentTime=0
 async function loadComments(){
 
 const res=await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,{
-
 headers:{
 'X-Master-Key':MASTER_KEY,
 'X-Access-Key':ACCESS_KEY
 }
-
 })
 
 const data=await res.json()
 
 comments=data.record.comments||[]
-
-/* ordenar destacados */
 
 comments.sort((a,b)=>(b.featured===true)-(a.featured===true))
 
@@ -288,7 +282,6 @@ ${c.reply ? `
 <div class="reactions">
 
 <button onclick="likeReply(${i})">👍 ${c.replyLikes||0}</button>
-
 <button onclick="dislikeReply(${i})">👎 ${c.replyDislikes||0}</button>
 
 </div>
@@ -302,7 +295,6 @@ ${c.reply ? `
 <div class="reactions">
 
 <button onclick="like(${i})">👍 ${c.likes||0}</button>
-
 <button onclick="dislike(${i})">👎 ${c.dislikes||0}</button>
 
 </div>
@@ -352,12 +344,27 @@ alert("Espera 10 segundos antes de comentar otra vez")
 return
 }
 
+lastCommentTime=now
+
+/* cargar comentarios actuales */
+
+const res=await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,{
+headers:{
+'X-Master-Key':MASTER_KEY,
+'X-Access-Key':ACCESS_KEY
+}
+})
+
+const data=await res.json()
+
+comments=data.record.comments||[]
+
 if(comments.some(c=>c.text.toLowerCase()===text.toLowerCase())){
 alert("Ese comentario ya fue publicado")
 return
 }
 
-lastCommentTime=now
+/* agregar comentario */
 
 comments.unshift({
 
@@ -375,58 +382,42 @@ featured:false
 document.getElementById("username").value=""
 document.getElementById("comment").value=""
 
-renderComments()
-
 await saveComments()
+
+loadComments()
 
 }
 
 /* LIKE COMENTARIO */
 
 function like(i){
-
 comments[i].likes=(comments[i].likes||0)+1
-
 renderComments()
-
 saveComments()
-
 }
 
 /* DISLIKE COMENTARIO */
 
 function dislike(i){
-
 comments[i].dislikes=(comments[i].dislikes||0)+1
-
 renderComments()
-
 saveComments()
-
 }
 
 /* LIKE RESPUESTA */
 
 function likeReply(i){
-
 comments[i].replyLikes=(comments[i].replyLikes||0)+1
-
 renderComments()
-
 saveComments()
-
 }
 
 /* DISLIKE RESPUESTA */
 
 function dislikeReply(i){
-
 comments[i].replyDislikes=(comments[i].replyDislikes||0)+1
-
 renderComments()
-
 saveComments()
-
 }
 
 loadComments()
