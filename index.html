@@ -129,6 +129,21 @@ line-height:1.6;
 color:#444;
 }
 
+/* RESPUESTA ADMIN */
+
+.reply{
+margin-top:12px;
+background:#eef4ff;
+padding:12px;
+border-radius:10px;
+font-size:13px;
+border-left:4px solid #003B8E;
+}
+
+.reply strong{
+color:#003B8E;
+}
+
 /* REACTIONS */
 
 .reactions{
@@ -189,7 +204,6 @@ const MASTER_KEY="$2a$10$b7iTGCHm3sPBn6UyLHiCZ.gSwzF/0y7X/a3mpVuqHE2ewj2sEd9Yi"
 const ACCESS_KEY="$2a$10$I6PZpdf7tigg4VzFm.HK4.0prPJwN4BpoCJiiLFEAzstr9juBlx.K"
 
 let comments=[]
-
 let lastCommentTime=0
 
 /* CARGAR */
@@ -226,6 +240,8 @@ container.innerHTML=comments.map((c,i)=>`
 <div class="username">${c.username}</div>
 
 <p>${c.text}</p>
+
+${c.reply ? `<div class="reply"><strong>IDILSA respondió:</strong><br>${c.reply}</div>` : ""}
 
 <div class="reactions">
 
@@ -266,7 +282,6 @@ body:JSON.stringify({comments})
 async function postComment(){
 
 const username=document.getElementById("username").value.trim()
-
 const text=document.getElementById("comment").value.trim()
 
 if(!username||!text){
@@ -274,7 +289,7 @@ alert("Completa los campos")
 return
 }
 
-/* anti spam tiempo */
+/* anti spam */
 
 const now=Date.now()
 
@@ -297,7 +312,8 @@ comments.unshift({
 username:username,
 text:text,
 likes:0,
-dislikes:0
+dislikes:0,
+reply:""
 
 })
 
